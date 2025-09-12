@@ -42,7 +42,7 @@ local function request(assetId: number, assetKind: "Image" | "Mesh")
 
 	local instance: Instance?
 	assert(tryResponse(downloadResponse, function(decoded: DownloadDecoded)
-		local content = Content.fromUri(`rbxasset://jailbreak/{decoded.unique}`)
+		local content = Content.fromUri(`rbxasset://{Constants.FolderName}/{decoded.unique}`)
 
 		if assetKind == "Image" then
 			local editableImage = AssetService:CreateEditableImageAsync(content)
