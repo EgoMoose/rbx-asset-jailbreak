@@ -29,7 +29,7 @@ local function tryResponse<T>(response: typeof(HttpService:RequestAsync(nil :: a
 	return false, `HttpFail {response.StatusCode}: {response.Body}`
 end
 
-local function request(assetId: number, assetKind: "Image" | "Mesh")
+local function downloadContent(assetId: number)
 	local downloadResponse = HttpService:RequestAsync({
 		Method = "POST",
 		Compress = Enum.HttpCompression.None,
@@ -40,44 +40,71 @@ local function request(assetId: number, assetKind: "Image" | "Mesh")
 		}),
 	})
 
-	local instance: Instance?
+	local result
 	assert(tryResponse(downloadResponse, function(decoded: DownloadDecoded)
-		local content = Content.fromUri(`rbxasset://{Constants.FolderName}/{decoded.unique}`)
+		result = {
+			content = Content.fromUri(`rbxasset://{Constants.FolderName}/{decoded.unique}`),
+			release = function()
+				local deleteResponse = HttpService:RequestAsync({
+					Method = "POST",
+					Compress = Enum.HttpCompression.None,
+					Headers = { ["content-type"] = "application/json" },
+					Url = `http://localhost:{Constants.ServePort}/delete`,
+					Body = HttpService:JSONEncode({
+						unique = decoded.unique,
+					}),
+				})
 
-		if assetKind == "Image" then
-			local editableImage = AssetService:CreateEditableImageAsync(content)
-
-			local label = Instance.new("ImageLabel")
-			label.BackgroundTransparency = 1
-			label.ImageContent = Content.fromObject(editableImage)
-			label.Size = UDim2.fromOffset(editableImage.Size.X, editableImage.Size.Y)
-
-			instance = label
-		elseif assetKind == "Mesh" then
-			local editableMesh = AssetService:CreateEditableMeshAsync(content)
-
-			local meshPart = AssetService:CreateMeshPartAsync(Content.fromObject(editableMesh))
-
-			instance = meshPart
-		end
-
-		local deleteResponse = HttpService:RequestAsync({
-			Method = "POST",
-			Compress = Enum.HttpCompression.None,
-			Headers = { ["content-type"] = "application/json" },
-			Url = `http://localhost:{Constants.ServePort}/delete`,
-			Body = HttpService:JSONEncode({
-				unique = decoded.unique,
-			}),
-		})
-
-		local success, err = tryResponse(deleteResponse)
-		if not success and err then
-			warn("Failed to clear download\n" .. err)
-		end
+				local success, err = tryResponse(deleteResponse)
+				if not success and err then
+					warn("Failed to clear download\n" .. err)
+				end
+			end,
+		}
 	end))
+	return result
+end
 
-	return instance :: Instance
+local function request(meshAssetId: number?, imageAssetId: number?)
+	local instance: Instance
+
+	if meshAssetId and not imageAssetId then
+		local download = downloadContent(meshAssetId)
+		local editableMesh = AssetService:CreateEditableMeshAsync(download.content)
+
+		local meshPart = AssetService:CreateMeshPartAsync(Content.fromObject(editableMesh))
+		meshPart.Anchored = true
+		instance = meshPart
+
+		download.release()
+	elseif not meshAssetId and imageAssetId then
+		local download = downloadContent(imageAssetId)
+		local editableImage = AssetService:CreateEditableImageAsync(download.content)
+
+		local label = Instance.new("ImageLabel")
+		label.BackgroundTransparency = 1
+		label.ImageContent = Content.fromObject(editableImage)
+		label.Size = UDim2.fromOffset(editableImage.Size.X, editableImage.Size.Y)
+		instance = label
+
+		download.release()
+	elseif meshAssetId and imageAssetId then
+		local meshDownload = downloadContent(meshAssetId)
+		local imageDownload = downloadContent(imageAssetId)
+
+		local editableMesh = AssetService:CreateEditableMeshAsync(meshDownload.content)
+		local editableImage = AssetService:CreateEditableImageAsync(imageDownload.content)
+
+		local meshPart = AssetService:CreateMeshPartAsync(Content.fromObject(editableMesh))
+		meshPart.Anchored = true
+		meshPart.TextureContent = Content.fromObject(editableImage)
+		instance = meshPart
+
+		meshDownload.release()
+		imageDownload.release()
+	end
+
+	return instance
 end
 
 -- Public
@@ -94,9 +121,9 @@ function Jailbreak.try(input: string | number)
 	local handler = AssetTypeHandlers[assetType]
 	if handler then
 		instances = {}
-		local assets = handler(assetId)
-		for _, asset in assets do
-			local instance = request(asset.assetId, asset.assetKind)
+		local results = handler(assetId)
+		for _, result in results do
+			local instance = request(result.meshAssetId, result.imageAssetId)
 			instance.Name = productInfo.Name
 			instance.Parent = workspace
 			table.insert(instances, instance)
