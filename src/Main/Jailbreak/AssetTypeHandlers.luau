@@ -1,7 +1,6 @@
 type AssetKind = "Image" | "Mesh"
 type Handler = (assetId: number) -> {
 	{
-		name: string?,
 		assetId: number,
 		assetKind: AssetKind,
 	}
@@ -35,7 +34,6 @@ local function createInsertAndFinder(className: string, property: string, assetK
 		end
 
 		return { {
-			name = nil,
 			assetId = assert(foundId, "Unable to identify the asset id."),
 			assetKind = assetKind,
 		} }

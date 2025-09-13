@@ -97,17 +97,14 @@ function Jailbreak.try(input: string | number)
 		local assets = handler(assetId)
 		for _, asset in assets do
 			local instance = request(asset.assetId, asset.assetKind)
-			instance.Name = asset.name or productInfo.Name
+			instance.Name = productInfo.Name
+			instance.Parent = workspace
 			table.insert(instances, instance)
 		end
 	end
 
 	if not instances then
 		error("Invalid asset type request " .. tostring(assetType))
-	end
-
-	for _, instance in instances do
-		instance.Parent = workspace
 	end
 
 	SelectionService:Set(instances)
