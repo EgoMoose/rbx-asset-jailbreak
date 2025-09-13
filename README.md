@@ -3,7 +3,7 @@
 This is a tool / workflow that allows bypassing roblox's constraints regarding the of use other people's assets with editable images / editable meshes. Note that this only works in studio.
 
 As per the documentation:
-> To prevent misuse, Create Editable APIs will only allow you to load and assets:
+> To prevent misuse, Create Editable APIs will only allow you to load assets:
 > - That are owned by the creator of the experience (if the experience is owned by an individual).
 > - That are owned by a group (if the experience is owned by the group).
 > - That are owned by the logged in Studio user (if the place file has not yet been saved or published to Roblox).
