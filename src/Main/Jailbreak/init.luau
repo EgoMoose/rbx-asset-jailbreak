@@ -51,14 +51,12 @@ local function request(assetId: number, assetKind: "Image" | "Mesh")
 			label.BackgroundTransparency = 1
 			label.ImageContent = Content.fromObject(editableImage)
 			label.Size = UDim2.fromOffset(editableImage.Size.X, editableImage.Size.Y)
-			label.Parent = workspace
 
 			instance = label
 		elseif assetKind == "Mesh" then
 			local editableMesh = AssetService:CreateEditableMeshAsync(content)
 
 			local meshPart = AssetService:CreateMeshPartAsync(Content.fromObject(editableMesh))
-			meshPart.Parent = workspace
 
 			instance = meshPart
 		end
@@ -92,19 +90,29 @@ function Jailbreak.try(input: string | number)
 	-- selene: allow(incorrect_standard_library_use)
 	local assetType = assert(Enum.AssetType:FromValue(productInfo.AssetTypeId :: number), "Unable to read asset type")
 
-	local result
+	local instances: { Instance }
 	local handler = AssetTypeHandlers[assetType]
 	if handler then
-		result = request(handler(assetId))
+		instances = {}
+		local assets = handler(assetId)
+		for _, asset in assets do
+			local instance = request(asset.assetId, asset.assetKind)
+			instance.Name = asset.name or productInfo.Name
+			table.insert(instances, instance)
+		end
 	end
 
-	if not result then
+	if not instances then
 		error("Invalid asset type request " .. tostring(assetType))
 	end
 
-	result.Name = productInfo.Name
-	SelectionService:Set({ result })
-	return result
+	for _, instance in instances do
+		instance.Parent = workspace
+	end
+
+	SelectionService:Set(instances)
+
+	return instances
 end
 
 return Jailbreak

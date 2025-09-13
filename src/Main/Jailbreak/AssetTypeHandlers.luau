@@ -1,5 +1,11 @@
 type AssetKind = "Image" | "Mesh"
-type Handler = (assetId: number) -> (number, AssetKind)
+type Handler = (assetId: number) -> {
+	{
+		name: string?,
+		assetId: number,
+		assetKind: AssetKind,
+	}
+}
 
 local AssetTypeHandlers: { [Enum.AssetType]: Handler } = {}
 
@@ -11,7 +17,13 @@ local function createInsertAndFinder(className: string, property: string, assetK
 		local instances = game:GetObjects("rbxassetid://" .. assetId) :: { Instance }
 		pcall(function()
 			for _, child in instances do
-				local instance = child:FindFirstChildWhichIsA(className, true)
+				local instance: Instance?
+				if child:IsA(className) then
+					instance = child
+				else
+					instance = child:FindFirstChildWhichIsA(className, true)
+				end
+
 				if instance then
 					foundId = tonumber((instance :: any)[property]:match("%d+"))
 					break
@@ -21,18 +33,29 @@ local function createInsertAndFinder(className: string, property: string, assetK
 		for _, child in instances do
 			child:Destroy()
 		end
-		return assert(foundId, "Unable to identify the asset id."), assetKind :: any
+
+		return { {
+			name = nil,
+			assetId = assert(foundId, "Unable to identify the asset id."),
+			assetKind = assetKind,
+		} }
 	end
 end
 
 -- Public
 
 AssetTypeHandlers[Enum.AssetType.Image] = function(assetId)
-	return assetId, "Image"
+	return { {
+		assetId = assetId,
+		assetKind = "Image",
+	} }
 end
 
 AssetTypeHandlers[Enum.AssetType.Mesh] = function(assetId)
-	return assetId, "Mesh"
+	return { {
+		assetId = assetId,
+		assetKind = "Mesh",
+	} }
 end
 
 AssetTypeHandlers[Enum.AssetType.Decal] = createInsertAndFinder("Decal", "Texture", "Image")
@@ -45,6 +68,8 @@ for _, enum in Enum.AssetType:GetEnumItems() do
 	end
 end
 
--- TODO: classic t-shirts, shirts, pants?
+AssetTypeHandlers[Enum.AssetType.TShirt] = createInsertAndFinder("ShirtGraphic", "Graphic", "Image")
+AssetTypeHandlers[Enum.AssetType.Shirt] = createInsertAndFinder("Shirt", "ShirtTemplate", "Image")
+AssetTypeHandlers[Enum.AssetType.Pants] = createInsertAndFinder("Pants", "PantsTemplate", "Image")
 
 return AssetTypeHandlers
