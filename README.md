@@ -18,7 +18,14 @@ In short, there are two parts to this tool.
 
 The first is a plugin component which does some sanity checks / probing and then sends a request via the http service to lune (the second component). Lune then downloads a copy of the asset and puts it in your studio content folder. From there the plugin can now reference that file via the `rbxasset://` scheme which roblox considers a local asset and thus lets you load as an editable mesh / image.
 
+## How to use?
+
+1. Download the repository and install the toolchain via [rokit.](https://github.com/rojo-rbx/rokit) i.e run `rokit install`
+2. Run `lune run wally-install`
+3. Run `rojo build plugin.project.json --output plugin.rbxm` and place the resulting rbxm in your local plugins folder then make sure you restart studio.
+4. Run `lune run serve-jailbreak`
+5. In studio you can now call `_G.jailbreak(link: string | number)` in the command line.
+
 ## TODO
 
 - Use a open cloud api key instead of the logged in cookie / legacy api
-- Support more asset types (?)
