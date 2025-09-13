@@ -8,6 +8,8 @@ As per the documentation:
 > - That are owned by a group (if the experience is owned by the group).
 > - That are owned by the logged in Studio user (if the place file has not yet been saved or published to Roblox).
 
+This tool does respect [privacy settings](https://devforum.roblox.com/t/beta-privacy-for-newly-created-image-mesh-and-decal-assets/3930210) for assets. Any asset not marked for open use cannot be loaded as an editable mesh.
+
 It was mainly written to allow me to fiddle with a number of test-cases quickly and easily.
 
 This is likely not of significant use beyond learning purposes / debugging.
