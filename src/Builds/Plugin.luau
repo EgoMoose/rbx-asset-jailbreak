@@ -1,3 +1,5 @@
+local InsertService = game:GetService("InsertService") :: InsertService
+
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local Jailbreak = require(pluginRoot.Main.Jailbreak)
 
@@ -8,6 +10,7 @@ function Plugin.build(plugin: Plugin)
 	binding.Name = "AssetJailbreak"
 	binding.Archivable = false
 	binding.OnInvoke = Jailbreak.try
+	binding.Parent = InsertService
 
 	-- selene: allow(global_usage)
 	_G.jailbreak = function(...)
