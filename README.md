@@ -27,7 +27,3 @@ The first is a plugin component which does some sanity checks / probing and then
 3. Run `rojo build plugin.project.json --output plugin.rbxm` and place the resulting rbxm in your local plugins folder then make sure you restart studio.
 4. Run `lune run serve`
 5. In studio you can now call `_G.jailbreak(link: string | number)` in the command line.
-
-## TODO
-
-- Use a open cloud api key instead of the logged in cookie / legacy api
